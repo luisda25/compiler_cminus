@@ -1,3 +1,5 @@
+# Analizador léxico C- 
+# Luis Daniel Filorio Luna A01028418
 from globalTypes import *
 import re
 
@@ -66,39 +68,60 @@ def getCategoria(c):
     elif c in ' \t\n':
         return 2  # blank
     elif c == '+':
-        return 3
+        return 3  # sum
     elif c == '-':
-        return 4
+        return 4  # sub
     elif c == '/':
-        return 5
+        return 5  # division
     elif c == '*':
-        return 6
+        return 6  # times
     elif c == '<':
-        return 7
+        return 7  # less
     elif c == '>':
-        return 8
+        return 8  # greater
     elif c == '=':
-        return 9
+        return 9  # assign
     elif c == '!':
-        return 10
+        return 10 # exclamation
     elif c == '(':
-        return 11
+        return 11 # open parenthesis
     elif c == '[':
-        return 12
+        return 12 # open cor
     elif c == '{':
-        return 13
+        return 13 # open bracket
     elif c == ')':
-        return 14
+        return 14 # close parenthesis
     elif c == ']':
-        return 15
+        return 15 # close cor
     elif c == '}':
-        return 16
+        return 16 # close br
     elif c == ',':
-        return 17
+        return 17 # comma
     elif c == ';':
-        return 18
+        return 18 # semi-colon
     else:
         return 19  # NOT
+
+# Funcion para detectar el tipo de token para el manejo de errores
+def _inferir_token(lexema, estado):
+    if estado == 0 or not lexema:
+        return f"caracter no reconocido '{lexema}'"
+    c = lexema[0]
+    if c.isdigit():
+        return "NUM"
+    if c.isalpha():
+        return "ID"
+    if c == '!':
+        return "NOT_EQUAL"
+    if c == '<':
+        return "LESS_EQUAL"
+    if c == '>':
+        return "GREAT_EQUAL"
+    if c == '=':
+        return "EQUAL"
+    if c == '/':
+        return "COMMENT"
+    return f"'{c}'"
 
 def getToken(imprime=True):
     global posicion
@@ -141,19 +164,20 @@ def getToken(imprime=True):
             if token == TokenType.ID:
                 token = keywords.get(lexema, TokenType.ID)
 
-            # Checa si es error 
+            # Error handler 
             if token == TokenType.ERROR:
                 if estado == 0:
-                    lexema = c 
+                    lexema = c
                     pos_error = posicion - 1
                 else:
                     lexema = lexema.strip()
                     pos_error = posicion - len(lexema)
 
+                nombre_token = _inferir_token(lexema, estado)
                 linea = programa[:pos_error].count('\n') + 1
                 linea_contenido = programa.split('\n')[linea - 1]
                 pos_en_linea = pos_error - programa[:pos_error].rfind('\n') - 1
-                print(f'Linea {linea}: Error en la formacion del token:')
+                print(f'Linea {linea}: Error en la formacion del token {nombre_token}:')
                 print(linea_contenido)
                 print(' ' * pos_en_linea + '^')
                 token = TokenType.ERROR
