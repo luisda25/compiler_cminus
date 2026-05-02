@@ -19,7 +19,9 @@ keywords = {
 }
 
 # Tabla de estados del DFA
-with open('tabla.txt', 'r') as f:
+from pathlib import Path
+_tabla_path = Path(__file__).resolve().parent / 'tabla.txt'
+with open(_tabla_path, 'r') as f:
     tabla = [[int(x) for x in line.split(',')] for line in f if line.strip()]
 
 # Estados de aceptación y tokens
