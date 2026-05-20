@@ -1,0 +1,26 @@
+/* Programa de prueba C-
+   Calcula el maximo de dos numeros y el factorial */
+
+int resultado;
+
+int maximo(int a, int b) {
+    if (a > b) return a;
+    else return b;
+}
+
+int factorial(int n) {
+    if (n <= 1) return 1;
+    else return n * factorial(n - 1);
+}
+
+void main(void) {
+    int x;
+    int y;
+    int f;
+    x = input();
+    y = input();
+    resultado = maximo(x, y);
+    output(resultado);
+    f = factorial(x);
+    output(f);
+}

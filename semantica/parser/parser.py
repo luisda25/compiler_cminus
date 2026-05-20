@@ -51,14 +51,13 @@ class NodoArbol:
         self.tipo     = None   # tipo de dato (TokenType.INT / TokenType.VOID)
         self.esArr    = False  # ¿es arreglo?
         self.tamano   = 0      # tamaño del arreglo
+        self.lineno   = 0      # número de línea en el fuente
 
 
 def nuevoNodo(tipo):
     t = NodoArbol()
-    if t is None:
-        print('Se terminó la memoria')
-    else:
-        t.exp = tipo
+    t.exp    = tipo
+    t.lineno = _linea_tok
     return t
 
 
@@ -173,10 +172,11 @@ def declaration():
         _panic(_SYNC_DECL | {TokenType.SEMI_COLON})
         return None
     nombre = tokenString
+    lineno  = _linea_tok   # línea del identificador, antes de consumirlo
     match(TokenType.ID)
 
     if token == TokenType.SEMI_COLON:
-        return _finish_var_decl(tipo, nombre, False, 0)
+        return _finish_var_decl(tipo, nombre, False, 0, lineno)
     elif token == TokenType.OPEN_COR:
         match(TokenType.OPEN_COR)
         if token != TokenType.NUM:
@@ -186,26 +186,27 @@ def declaration():
         tam = int(tokenString)
         match(TokenType.NUM)
         match(TokenType.CLOSE_COR)
-        return _finish_var_decl(tipo, nombre, True, tam)
+        return _finish_var_decl(tipo, nombre, True, tam, lineno)
     elif token == TokenType.OPEN_PAR:
-        return _finish_fun_decl(tipo, nombre)
+        return _finish_fun_decl(tipo, nombre, lineno)
     else:
         errorSintaxis(f"token inesperado '{tokenString}' en declaración")
         _panic(_SYNC_DECL)
         return None
 
 
-def _finish_var_decl(tipo, nombre, es_arr, tamano):
+def _finish_var_decl(tipo, nombre, es_arr, tamano, lineno=0):
     match(TokenType.SEMI_COLON)
     t = nuevoNodo(TipoNodo.VAR_DECL)
     t.tipo   = tipo
     t.nombre = nombre
     t.esArr  = es_arr
     t.tamano = tamano
+    t.lineno = lineno
     return t
 
 
-def _finish_fun_decl(tipo, nombre):
+def _finish_fun_decl(tipo, nombre, lineno=0):
     match(TokenType.OPEN_PAR)
     ps     = params()           # nodo PARAM_LIST o PARAMS_VOID
     match(TokenType.CLOSE_PAR)
@@ -215,6 +216,7 @@ def _finish_fun_decl(tipo, nombre):
     t.nombre  = nombre
     t.hijoIzq = ps              # nodo de parámetros
     t.hijoDer = cuerpo
+    t.lineno  = lineno
     return t
 
 
@@ -237,8 +239,10 @@ def params():
         if token == TokenType.CLOSE_PAR:
             return nuevoNodo(TipoNodo.PARAMS_VOID)
         # void es el tipo del primer parámetro
+        p_lineno = _linea_tok
         p = nuevoNodo(TipoNodo.PARAM)
-        p.tipo = TokenType.VOID
+        p.tipo   = TokenType.VOID
+        p.lineno = p_lineno
         if token != TokenType.ID:
             errorSintaxis(f"se esperaba identificador en parámetro pero se encontró '{tokenString}'")
             _panic({TokenType.COMMA, TokenType.CLOSE_PAR})
@@ -282,9 +286,11 @@ def param():
         errorSintaxis(f"se esperaba identificador en parámetro pero se encontró '{tokenString}'")
         _panic({TokenType.COMMA, TokenType.CLOSE_PAR})
         return nuevoNodo(TipoNodo.PARAM)
+    lineno = _linea_tok
     t = nuevoNodo(TipoNodo.PARAM)
     t.tipo   = tipo
     t.nombre = tokenString
+    t.lineno = lineno
     match(TokenType.ID)
     if token == TokenType.OPEN_COR:
         match(TokenType.OPEN_COR)
@@ -321,6 +327,7 @@ def local_declarations():
             _panic({TokenType.SEMI_COLON, TokenType.CLOSE_BR})
             continue
         nombre = tokenString
+        lineno  = _linea_tok   # línea del ID antes de consumirlo
         match(TokenType.ID)
         if token == TokenType.OPEN_COR:
             match(TokenType.OPEN_COR)
@@ -331,9 +338,9 @@ def local_declarations():
             tam = int(tokenString)
             match(TokenType.NUM)
             match(TokenType.CLOSE_COR)
-            decls.append(_finish_var_decl(tipo, nombre, True, tam))
+            decls.append(_finish_var_decl(tipo, nombre, True, tam, lineno))
         else:
-            decls.append(_finish_var_decl(tipo, nombre, False, 0))
+            decls.append(_finish_var_decl(tipo, nombre, False, 0, lineno))
     return lista_hermanos(decls)
 
 

@@ -1,6 +1,6 @@
 # Analizador léxico C- 
 # Luis Daniel Filorio Luna A01028418
-from globalTypes import *
+from globalTypes import *   # el directorio lexer/ siempre está en sys.path cuando se carga
 import re
 
 # Variables globalTypes
